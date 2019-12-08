@@ -6,7 +6,7 @@ Parser::Parser(const std::string& file_name) : file_handler_(file_name, FileHand
 
 node_ptr Parser::GetAst()
 {
-	node_ptr root(new Node(NodeKind::ROOT, OperationKind::DEFINE_PROGRAM));
+	node_ptr root(new Node(NodeKind::ROOT, OperationKind::DEFINE_PROGRAM, nullptr));
 	node_ptr prev = root;
 
 	char symbol;
@@ -18,12 +18,13 @@ node_ptr Parser::GetAst()
 
 		NodeKind node_kind = node_kinds_.at(symbol);
 		OperationKind operation_kind = operation_kinds_.at(symbol);
-		node_ptr current(new Node(node_kind, operation_kind));
+		node_ptr current(new Node(node_kind, operation_kind, prev));
 
 		if (operation_kind == OperationKind::CLOSE_BRACKET)
 		{
 			prev = open_bracket_nodes.top();
 			open_bracket_nodes.pop();
+			current->parent = prev;
 			prev->left = current;
 			prev = current;
 		}

@@ -35,40 +35,20 @@ std::string get_file_name(std::string file_name)
 class Optimizer
 {
 private:
-
-
-	const std::map<std::tuple<OperationKind, bool, bool>, NodeKind> optimizer_operations_map_ = {
-		{{OperationKind::MOVE, false, false}, NodeKind::MOVE_DOWN},
-		{{OperationKind::MOVE, false, true}, NodeKind::MOVE_DEC},
-		{{OperationKind::MOVE, true, false}, NodeKind::MOVE_UP},
-		{{OperationKind::MOVE, true, true}, NodeKind::MOVE_INC},
-		{{OperationKind::VALUE, false, false}, NodeKind::SUB},
-		{{OperationKind::VALUE, false, true}, NodeKind::DEC},
-		{{OperationKind::VALUE, true, false}, NodeKind::ADD},
-		{{OperationKind::VALUE, true, true}, NodeKind::INC},
-	};
 	const std::unordered_set<OperationKind> optimizer_operations_ = {
 		OperationKind::MOVE,
 		OperationKind::VALUE,
 	};
-	const std::unordered_set<char> positive_operation_ = {
-		'+',
-		'>',
-	};
-
-	bool IsSpace(const char& symbol) const
-	{
-		return symbol == ' ';
-	}
+	const std::unordered_set<NodeKind> positive_node_kinds_ = { NodeKind::ADD, NodeKind::INC, NodeKind::MOVE_INC, NodeKind::MOVE_UP };
 
 	bool IsOptimizerOperation(const OperationKind& kind) const
 	{
 		return optimizer_operations_.find(kind) != optimizer_operations_.end();
 	}
 
-	bool IsPositiveSymbol(const char& symbol) const
+	bool IsPositiveNodeKind(const NodeKind& kind) const
 	{
-		return positive_operation_.find(symbol) != positive_operation_.end();
+		return positive_node_kinds_.find(kind) != positive_node_kinds_.end();
 	}
 
 public:
@@ -79,7 +59,7 @@ public:
 	void Optimize(node_ptr root)
 	{
 		if (root->left)
-			OptimizeNode(root->left, root);
+			OptimizeNode(root->left);
 
 		//bool is_start = false;
 		//ReducedOperation prev_operation = ReducedOperation::VALUE;
@@ -128,54 +108,87 @@ public:
 		//}
 	}
 
-	void OptimizeNode(node_ptr node, node_ptr parent)
+	void OptimizeNode(node_ptr node)
 	{
-		bool is_delete_node = false;
-		if (node->right && node->operation_kind == node->right->operation_kind && IsOptimizerOperation(node->operation_kind))
+		bool is_optimize = false;
+		NodeKind k = node->kind;
+		if (node->left && node->left->operation_kind == node->operation_kind && IsOptimizerOperation(node->operation_kind))
 		{
-			int value = 0;
-			CountValue(node, value);
-			if (value == 0)
-			{
-				is_delete_node = true;
-
-				if (parent->left == node)
-					parent->left = node->left;
-				else
-					parent->right = node->left;
-			}
-			else
-			{
-				bool is_positive = value > 0, is_one = abs(value) == 1;
-				NodeKind kind = optimizer_operations_map_.at({ node->operation_kind, is_positive, is_one });
-				node->kind = kind;
-				node->value = abs(value);
-				node->right = nullptr;
-			}
+			node = OptimizeNodeSequence(node);
+			is_optimize = true;
 		}
-		else if (node->right)
+		else if (node->kind == NodeKind::CLOSE_BRACKET && node->parent->right == nullptr)
 		{
-			OptimizeNode(node->right, node);
+			ChangeChildren(node->parent, node->left);
+			node = node->left;
+			is_optimize = true;
+		}
+
+		if (is_optimize)
+		{
+			if (node && IsOptimizerOperation(node->operation_kind) && node->operation_kind == node->parent->operation_kind)
+			{
+				OptimizeNode(node->parent);
+			}
+			else if (node)
+			{
+				OptimizeNode(node);
+			}
+			return;
+
+		}
+
+		if (node->right)
+		{
+			OptimizeNode(node->right);
 		}
 
 		if (node->left)
 		{
-			if (is_delete_node)
-				OptimizeNode(node->left, parent);
-			else
-				OptimizeNode(node->left, node);
+			OptimizeNode(node->left);
 		}
 	}
 
-	void CountValue(node_ptr node, int& value)
+	node_ptr OptimizeNodeSequence(node_ptr first_node)
 	{
-		if (node->kind == NodeKind::INC || node->kind == NodeKind::MOVE_INC || node->kind == NodeKind::ADD || node->kind == NodeKind::MOVE_UP)
-			value += node->value;
-		else
-			value -= node->value;
+		int value = 0;
+		node_ptr another_node = first_node;
 
-		if (node->right)
-			CountValue(node->right, value);
+		while (another_node && another_node->operation_kind == first_node->operation_kind)
+		{
+			if (IsPositiveNodeKind(another_node->kind))
+				value += another_node->value;
+			else
+				value -= another_node->value;
+
+			another_node = another_node->left;
+		}
+
+		if (value)
+		{
+			first_node->ChangeType(value);
+			first_node->left = another_node;
+			another_node->parent = first_node;
+		}
+		else
+		{
+			ChangeChildren(first_node, another_node);
+		}
+
+		return another_node;
+	}
+
+	void ChangeChildren(node_ptr old_child, node_ptr new_child)
+	{
+		node_ptr parent = old_child->parent;
+
+		if (parent->left == old_child)
+			parent->left = new_child;
+		else
+			parent->right = new_child;
+
+		if (new_child)
+			new_child->parent = parent;
 	}
 
 	/*const std::unordered_map<Operation, std::string> operation_to_token_ = {
@@ -246,8 +259,9 @@ int main(int argc, char* argv[])
 			Parser parser(file_name);
 			node_ptr ast = parser.GetAst();
 			AstPrinter::Print(ast);
-			/*Optimizer optimizer(compiler_file_name);
-			optimizer.Optimize();*/
+			Optimizer optimizer;
+			optimizer.Optimize(ast);
+			AstPrinter::Print(ast);
 			CodeGenerator generate("result");
 			generate.Generate(ast);
 		}

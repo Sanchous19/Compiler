@@ -1,12 +1,24 @@
 #include "Node.h"
 
 
-Node::Node(NodeKind node_kind, OperationKind operation_kind, const int& value) : kind(node_kind), operation_kind(operation_kind), value(value), left(nullptr), right(nullptr)
+Node::Node(NodeKind node_kind, OperationKind operation_kind, std::shared_ptr<Node> parent, const int& value) 
+	: kind(node_kind), operation_kind(operation_kind), value(value), left(nullptr), right(nullptr)
 {
+	this->parent = parent;
+
 	if (value_one_kinds_.find(node_kind) != value_one_kinds_.end())
 	{
 		this->value = 1;
 	}
+}
+
+
+void Node::ChangeType(const int& new_value)
+{
+	bool is_positive = new_value > 0, is_one = abs(new_value) == 1;
+	NodeKind new_kind = change_type_map_.at({ operation_kind, is_positive, is_one });
+	kind = new_kind;
+	value = abs(new_value);
 }
 
 
@@ -47,4 +59,16 @@ const std::unordered_map<NodeKind, std::string> Node::node_kind_to_text_ = {
 	{NodeKind::ROOT, "ROOT"},
 	{NodeKind::SUB, "SUB"},
 	{NodeKind::WHILE, "WHILE"},
+};
+
+
+const std::map<std::tuple<OperationKind, bool, bool>, NodeKind> Node::change_type_map_ = {
+	{{OperationKind::MOVE, false, false}, NodeKind::MOVE_DOWN},
+	{{OperationKind::MOVE, false, true}, NodeKind::MOVE_DEC},
+	{{OperationKind::MOVE, true, false}, NodeKind::MOVE_UP},
+	{{OperationKind::MOVE, true, true}, NodeKind::MOVE_INC},
+	{{OperationKind::VALUE, false, false}, NodeKind::SUB},
+	{{OperationKind::VALUE, false, true}, NodeKind::DEC},
+	{{OperationKind::VALUE, true, false}, NodeKind::ADD},
+	{{OperationKind::VALUE, true, true}, NodeKind::INC},
 };

@@ -1,8 +1,10 @@
 #pragma once
 
 #include <iostream>
+#include <map>
 #include <memory>
 #include <string>
+#include <tuple>
 #include <unordered_map>
 #include <unordered_set>
 
@@ -15,17 +17,21 @@ struct Node
 {
 	std::shared_ptr<Node> left;
 	std::shared_ptr<Node> right;
+	std::shared_ptr<Node> parent;
 	NodeKind kind;
 	OperationKind operation_kind;
 	int value;
 
-	Node(NodeKind node_kind, OperationKind operation_kind, const int& value = 0);
+	Node(NodeKind node_kind, OperationKind operation_kind, std::shared_ptr<Node> parent, const int& value = 0);
+
+	void ChangeType(const int& new_value);
 
 	friend std::ostream& operator<<(std::ostream& out, const Node& node);
 
 private:
 	static const std::unordered_set<NodeKind> value_one_kinds_;
 	static const std::unordered_map<NodeKind, std::string> node_kind_to_text_;
+	static const std::map<std::tuple<OperationKind, bool, bool>, NodeKind> change_type_map_;
 };
 
 
