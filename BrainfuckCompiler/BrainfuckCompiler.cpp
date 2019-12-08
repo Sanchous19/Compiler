@@ -2,11 +2,9 @@
 #include <fstream>
 #include <unordered_set>
 #include <memory>
-
 #include <string>
 #include <regex>
 #include <unordered_map>
-#include <tuple>
 #include <set>
 #include <map>
 #include <stack>
@@ -17,17 +15,10 @@
 #include "LexicalAnalyzer.h"
 #include "Node.h"
 #include "Parser.h"
+#include "Settings.h"
 
 using node_ptr = std::shared_ptr<Node>;
 
-
-std::string get_file_name(std::string file_name)
-{
-	std::regex r("[^.]*");
-	std::smatch match;
-	std::regex_search(file_name, match, r);
-	return match[0];
-}
 
 
 
@@ -233,8 +224,6 @@ public:
 
 
 
-
-
 int main(int argc, char* argv[])
 {
 	std::string s = "sadfdfg" + 'c';
@@ -246,27 +235,50 @@ int main(int argc, char* argv[])
 		std::cout << it << " ";
 
 	std::fstream f("f", std::ios::out);*/
-	if (argc < 2)
-		exit(1);
+
+
+	std::vector<std::string> args;
+	for (size_t i = 1; i < static_cast<size_t>(argc); i++)
+	{
+		args.push_back(argv[i]);
+	}
+
 	try
 	{
-		const std::string file_name = argv[1];
+		Settings settings(args);
+		std::string file_name = settings.CompilerFileName();
+
+		LexicalAnalyzer lexical_analyzer(file_name);
+		lexical_analyzer.Analyze();
+
+		if (settings.IsOnlyLexicalAnalyze())
+			return 0;
+
+		Parser parser(settings.CompilerFileName());
+		node_ptr ast = parser.GetAst();
+
+		if (settings.IsPrintAstBeforeOptimize())
 		{
-			LexicalAnalyzer lexical_analyzer(file_name);
-			lexical_analyzer.Analyze();
-		}
-		{
-			Parser parser(file_name);
-			node_ptr ast = parser.GetAst();
 			AstPrinter::Print(ast);
+			std::cout << std::endl;
+		}
+
+		if (settings.IsOptimize())
+		{
 			Optimizer optimizer;
 			optimizer.Optimize(ast);
-			AstPrinter::Print(ast);
-			CodeGenerator generate("result");
-			generate.Generate(ast);
+
+			if (settings.IsPrintAstBeforeOptimize())
+			{
+				AstPrinter::Print(ast);
+				std::cout << std::endl;
+			}
 		}
-		{
-		}
+
+		std::string result_file_name = settings.ResultFileName();
+		CodeGenerator generate("result");
+		generate.Generate(ast);
+
 		/*const std::string s = "cat " + compiler_file_name;
 		system(s.c_str());*/
 
