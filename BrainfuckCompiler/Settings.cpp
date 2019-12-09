@@ -2,18 +2,20 @@
 
 
 Settings::Settings(const std::vector<std::string>& args)
-	: is_only_lexical_analyze_(false), is_optimize_(true), is_print_ast_after_optimize_(false), is_print_ast_before_optimize_(false), file_name_(""), result_file_name_("")
+	: is_help_(false), is_only_lexical_analyze_(false), is_optimize_(true), is_print_ast_after_optimize_(false), is_print_ast_before_optimize_(false), file_name_(""), result_file_name_("")
 {
 	for (size_t i = 0; i < args.size(); i++)
 	{
 		const std::string& arg = args[i];
 
-		if (arg.size() > 2 && arg.substr(2) == "--")
+		if (arg.size() > 2 && arg.substr(0, 2) == "--")
 		{
-			if (arg == "--la")
+			if (arg == "--help")
+				is_help_ = true;
+			else if (arg == "--la")
 				is_only_lexical_analyze_ = true;
 			else if (arg == "--no-opt")
-				is_optimize_ = true;
+				is_optimize_ = false;
 			else if (arg == "--pr-ast")
 				is_print_ast_before_optimize_ = true;
 			else if (arg == "--pr-opt-ast")
@@ -65,10 +67,16 @@ Settings::Settings(const std::vector<std::string>& args)
 
 	CheckCorrectness(args);
 
-	if (result_file_name_.empty())
+	if (!is_help_ && !is_only_lexical_analyze_ && result_file_name_.empty())
 	{
 		result_file_name_ = GetFileName(file_name_) + extension_;
 	}
+}
+
+
+bool Settings::IsHelp() const
+{
+	return is_help_;
 }
 
 
@@ -96,16 +104,29 @@ bool Settings::IsPrintAstBeforeOptimize() const
 }
 
 
-
 std::string Settings::CompilerFileName() const
 {
 	return file_name_;
 }
 
-
 std::string Settings::ResultFileName() const
 {
 	return result_file_name_;
+}
+
+
+std::string Settings::Help() const
+{
+	std::string help_text = std::string("") +
+		"Usage: BrainfuckCompiler.exe [options] file\n" +
+		"Options:\n" +
+		"--help\t\t\t Display this information.\n" +
+		"--la\t\t\t Only lexical analyze of file.\n" +
+		"--no-opt\t\t Compile file without optimization.\n" +
+		"--pr-ast\t\t Display AST before optimization.\n" +
+		"--pr-opt-ast\t\t Display AST after optimization.\n" +
+		"-o <result_file>\t Place the output into <result_file>.\n";
+	return help_text;
 }
 
 
@@ -117,19 +138,23 @@ std::string Settings::GetFileName(std::string file_name) const
 	return match[0];
 }
 
-
 bool Settings::IsFileNameWithoutExtension(std::string file_name) const
 {
-	std::regex r("[^.]*");
-	std::smatch match;
-	std::regex_search(file_name, match, r);
-	return match.size() == 1;
+	return std::count(file_name.begin(), file_name.end(), '.') == 0;
 }
 
 
 void Settings::CheckCorrectness(const std::vector<std::string>& args) const
 {
-	if (file_name_ == "")
+	if (is_help_)
+	{
+		if (args.size() > 1)
+			throw ArgsException("Arguments exception when only help");
+		else
+			return;
+	}
+
+	if (file_name_.empty())
 	{
 		throw ArgsException("No input file");
 	}

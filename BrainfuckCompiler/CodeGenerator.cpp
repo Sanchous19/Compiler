@@ -2,7 +2,7 @@
 
 
 CodeGenerator::CodeGenerator(const std::string& file_name)
-	: file_name_(file_name + ".c"), file_handler_(file_name_, FileHandler::OpenMode::WRITE), template_file_handler_(template_file_name_, FileHandler::OpenMode::READ) {}
+	: file_name_(file_name), file_handler_(file_name_, FileHandler::OpenMode::WRITE), template_file_handler_(template_file_name_, FileHandler::OpenMode::READ) {}
 
 
 void CodeGenerator::Generate(node_ptr root)
