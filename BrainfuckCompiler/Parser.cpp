@@ -6,7 +6,7 @@ Parser::Parser(const std::string& file_name) : file_handler_(file_name, FileHand
 
 node_ptr Parser::GetAst()
 {
-	node_ptr root(new Node(NodeKind::ROOT, OperationKind::DEFINE_PROGRAM, nullptr));
+	node_ptr root(new Node(NodeKind::ROOT, nullptr));
 	node_ptr prev = root;
 
 	char symbol;
@@ -17,10 +17,9 @@ node_ptr Parser::GetAst()
 			continue;
 
 		NodeKind node_kind = node_kinds_.at(symbol);
-		OperationKind operation_kind = operation_kinds_.at(symbol);
-		node_ptr current(new Node(node_kind, operation_kind, prev));
+		node_ptr current(new Node(node_kind, prev));
 
-		if (operation_kind == OperationKind::CLOSE_BRACKET)
+		if (current->operation_kind == OperationKind::CLOSE_BRACKET)
 		{
 			prev = open_bracket_nodes.top();
 			open_bracket_nodes.pop();
@@ -30,14 +29,14 @@ node_ptr Parser::GetAst()
 		}
 		else
 		{
-			if (prev->operation_kind == OperationKind::OPEN_BRACKET)
+			if (prev->operation_kind == OperationKind::WHILE)
 				prev->right = current;
 			else
 				prev->left = current;
 			prev = current;
 		}
 
-		if (operation_kind == OperationKind::OPEN_BRACKET)
+		if (current->operation_kind == OperationKind::WHILE)
 		{
 			open_bracket_nodes.push(current);
 		}
@@ -58,22 +57,10 @@ const std::unordered_map<char, NodeKind> Parser::node_kinds_ = {
 	{',', NodeKind::INPUT},
 	{'>', NodeKind::MOVE_INC},
 	{'<', NodeKind::MOVE_DEC},
-	{'[', NodeKind::OPEN_BRACKET},
+	{'[', NodeKind::WHILE},
 	{'.', NodeKind::OUTPUT},
 	{'+', NodeKind::INC},
 	{'-', NodeKind::DEC},
-};
-
-
-const std::unordered_map<char, OperationKind> Parser::operation_kinds_ = {
-	{']', OperationKind::CLOSE_BRACKET},
-	{',', OperationKind::INPUT},
-	{'>', OperationKind::MOVE},
-	{'<', OperationKind::MOVE},
-	{'[', OperationKind::OPEN_BRACKET},
-	{'.', OperationKind::OUTPUT},
-	{'+', OperationKind::VALUE},
-	{'-', OperationKind::VALUE},
 };
 
 

@@ -22,13 +22,14 @@ struct Node
 	OperationKind operation_kind;
 	int value;
 
-	Node(NodeKind node_kind, OperationKind operation_kind, std::shared_ptr<Node> parent, const int& value = 0);
+	Node(NodeKind node_kind, std::shared_ptr<Node> parent, const int& value = 0);
 
 	void ChangeType(const int& new_value, const bool& is_assign = false);
 
 	friend std::ostream& operator<<(std::ostream& out, const Node& node);
 
 private:
+	static const std::unordered_map<NodeKind, OperationKind> node_kind_to_operation_kind_;
 	static const std::unordered_set<NodeKind> value_one_kinds_;
 	static const std::unordered_map<NodeKind, std::string> node_kind_to_text_;
 	static const std::map<std::tuple<OperationKind, bool, bool>, NodeKind> change_type_map_;
@@ -49,7 +50,6 @@ enum class NodeKind
 	MOVE_DOWN,
 	MOVE_INC,
 	MOVE_UP,
-	OPEN_BRACKET,
 	OUTPUT,
 	ROOT,
 	SUB,
@@ -63,7 +63,7 @@ enum class OperationKind
 	DEFINE_PROGRAM,
 	INPUT,
 	MOVE,
-	OPEN_BRACKET,
 	OUTPUT,
 	VALUE,
+	WHILE,
 };

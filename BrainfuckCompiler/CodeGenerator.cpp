@@ -77,9 +77,9 @@ const std::unordered_map<NodeKind, std::string> CodeGenerator::node_representati
 	{NodeKind::MOVE_DOWN, "i -= "},
 	{NodeKind::MOVE_INC, "i++;"},
 	{NodeKind::MOVE_UP, "i += "},
-	{NodeKind::OPEN_BRACKET, "while (arr[i]) {"},
 	{NodeKind::OUTPUT, "putchar(arr[i]);"},
 	{NodeKind::SUB, "arr[i] -= "},
+	{NodeKind::WHILE, "while (arr[i]) {"},
 };
 
 

@@ -21,7 +21,6 @@ private:
 	FileHandler file_handler_;
 
 	static const std::unordered_map<char, NodeKind> node_kinds_;
-	static const std::unordered_map<char, OperationKind> operation_kinds_;
 	static const std::unordered_set<char> ignore_symbols_;
 
 	bool IsIgnoreSymbol(const char& c) const;

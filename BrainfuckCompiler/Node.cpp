@@ -1,9 +1,11 @@
 #include "Node.h"
 
 
-Node::Node(NodeKind node_kind, OperationKind operation_kind, std::shared_ptr<Node> parent, const int& value) 
-	: kind(node_kind), operation_kind(operation_kind), value(value), left(nullptr), right(nullptr)
+Node::Node(NodeKind node_kind, std::shared_ptr<Node> parent, const int& value) 
+	: kind(node_kind), value(value), left(nullptr), right(nullptr)
 {
+	operation_kind = node_kind_to_operation_kind_.at(node_kind);
+
 	this->parent = parent;
 
 	if (value_one_kinds_.find(node_kind) != value_one_kinds_.end())
@@ -42,6 +44,24 @@ std::ostream& operator<<(std::ostream& out, const Node& node)
 }
 
 
+const std::unordered_map<NodeKind, OperationKind> Node::node_kind_to_operation_kind_ = {
+	{NodeKind::ADD, OperationKind::VALUE },
+	{NodeKind::ASSIGN, OperationKind::VALUE },
+	{NodeKind::CLOSE_BRACKET, OperationKind::CLOSE_BRACKET},
+	{NodeKind::DEC, OperationKind::VALUE },
+	{NodeKind::INC, OperationKind::VALUE },
+	{NodeKind::INPUT, OperationKind::INPUT },
+	{NodeKind::MOVE_DEC, OperationKind::MOVE },
+	{NodeKind::MOVE_DOWN, OperationKind::MOVE },
+	{NodeKind::MOVE_INC, OperationKind::MOVE },
+	{NodeKind::MOVE_UP, OperationKind::MOVE },
+	{NodeKind::OUTPUT, OperationKind::OUTPUT },
+	{NodeKind::ROOT, OperationKind::DEFINE_PROGRAM},
+	{NodeKind::SUB, OperationKind::VALUE },
+	{NodeKind::WHILE, OperationKind::WHILE},
+};
+
+
 const std::unordered_set<NodeKind> Node::value_one_kinds_ = {
 		NodeKind::DEC,
 		NodeKind::INC,
@@ -63,7 +83,6 @@ const std::unordered_map<NodeKind, std::string> Node::node_kind_to_text_ = {
 	{NodeKind::MOVE_DOWN, "MOVE_DOWN"},
 	{NodeKind::MOVE_INC, "MOVE_INC"},
 	{NodeKind::MOVE_UP, "MOVE_UP"},
-	{NodeKind::OPEN_BRACKET, "OPEN_BRACKET"},
 	{NodeKind::OUTPUT, "OUTPUT"},
 	{NodeKind::ROOT, "ROOT"},
 	{NodeKind::SUB, "SUB"},

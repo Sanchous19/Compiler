@@ -30,7 +30,7 @@ void Optimizer::OptimizeNode(node_ptr node)
 		}
 		else if ((first_cycle_node->kind == NodeKind::INC || first_cycle_node->kind == NodeKind::DEC) && first_cycle_node->left == nullptr)
 		{
-			node_ptr assign_node(new Node(NodeKind::ASSIGN, OperationKind::VALUE, nullptr));
+			node_ptr assign_node(new Node(NodeKind::ASSIGN, nullptr));
 
 			ChangeChildren(node->parent, assign_node);
 			assign_node->left = node->left;
@@ -41,7 +41,7 @@ void Optimizer::OptimizeNode(node_ptr node)
 			node = assign_node;
 			is_optimize = true;
 		}
-		else if (first_cycle_node->kind == NodeKind::OPEN_BRACKET && first_cycle_node->left->left == nullptr)
+		else if (first_cycle_node->kind == NodeKind::WHILE && first_cycle_node->left->left == nullptr)
 		{
 			ChangeChildren(node->parent, first_cycle_node);
 			first_cycle_node->left->left = node->left;
