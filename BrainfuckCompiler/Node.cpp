@@ -13,12 +13,20 @@ Node::Node(NodeKind node_kind, OperationKind operation_kind, std::shared_ptr<Nod
 }
 
 
-void Node::ChangeType(const int& new_value)
+void Node::ChangeType(const int& new_value, const bool& is_assign)
 {
-	bool is_positive = new_value > 0, is_one = abs(new_value) == 1;
-	NodeKind new_kind = change_type_map_.at({ operation_kind, is_positive, is_one });
-	kind = new_kind;
-	value = abs(new_value);
+	if (is_assign)
+	{
+		kind = NodeKind::ASSIGN;
+		value = new_value;
+	}
+	else
+	{
+		bool is_positive = new_value > 0, is_one = abs(new_value) == 1;
+		NodeKind new_kind = change_type_map_.at({ operation_kind, is_positive, is_one });
+		kind = new_kind;
+		value = abs(new_value);
+	}
 }
 
 
@@ -26,7 +34,7 @@ std::ostream& operator<<(std::ostream& out, const Node& node)
 {
 	std::string node_text = Node::node_kind_to_text_.at(node.kind);
 	std::string value = "";
-	if (node.value > 1)
+	if (node.value > 1 || node.kind == NodeKind::ASSIGN)
 		value = " " + std::to_string(node.value);
 
 	out << node_text << value;
@@ -44,6 +52,7 @@ const std::unordered_set<NodeKind> Node::value_one_kinds_ = {
 
 const std::unordered_map<NodeKind, std::string> Node::node_kind_to_text_ = {
 	{NodeKind::ADD, "ADD"},
+	{NodeKind::ASSIGN, "ASSIGN"},
 	{NodeKind::CLOSE_BRACKET, "CLOSE_BRACKET"},
 	{NodeKind::DEC, "DEC"},
 	{NodeKind::ELSE, "ELSE"},

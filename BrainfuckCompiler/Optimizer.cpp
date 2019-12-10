@@ -17,11 +17,41 @@ void Optimizer::OptimizeNode(node_ptr node)
 		node = OptimizeNodeSequence(node);
 		is_optimize = true;
 	}
-	else if (node->kind == NodeKind::CLOSE_BRACKET && node->parent->right == nullptr)
+	else if (node->kind == NodeKind::CLOSE_BRACKET)
 	{
-		ChangeChildren(node->parent, node->left);
-		node = node->left;
-		is_optimize = true;
+		node_ptr first_cycle_node = node->parent->right;
+
+		if (first_cycle_node == nullptr)
+		{
+			/*ChangeChildren(node->parent, node->left);
+			
+			node = node->left;
+			is_optimize = true;*/
+		}
+		else if ((first_cycle_node->kind == NodeKind::INC || first_cycle_node->kind == NodeKind::DEC) && first_cycle_node->left == nullptr)
+		{
+			node_ptr assign_node(new Node(NodeKind::ASSIGN, OperationKind::VALUE, nullptr));
+
+			ChangeChildren(node->parent, assign_node);
+			assign_node->left = node->left;
+
+			if (node->left)
+				node->left->parent = assign_node;
+
+			node = assign_node;
+			is_optimize = true;
+		}
+		else if (first_cycle_node->kind == NodeKind::OPEN_BRACKET && first_cycle_node->left->left == nullptr)
+		{
+			ChangeChildren(node->parent, first_cycle_node);
+			first_cycle_node->left->left = node->left;
+
+			if (node->left)
+				node->left->parent = first_cycle_node->left;
+
+			node = node->left;
+			is_optimize = true;			
+		}
 	}
 
 	if (is_optimize)
@@ -53,11 +83,17 @@ void Optimizer::OptimizeNode(node_ptr node)
 node_ptr Optimizer::OptimizeNodeSequence(node_ptr first_node)
 {
 	int value = 0;
+	bool is_assign = false;
 	node_ptr another_node = first_node;
 
 	while (another_node && another_node->operation_kind == first_node->operation_kind)
 	{
-		if (IsPositiveNodeKind(another_node->kind))
+		if (another_node->kind == NodeKind::ASSIGN)
+		{
+			value = another_node->value;
+			is_assign = true;
+		}
+		else if (IsPositiveNodeKind(another_node->kind))
 			value += another_node->value;
 		else
 			value -= another_node->value;
@@ -67,9 +103,11 @@ node_ptr Optimizer::OptimizeNodeSequence(node_ptr first_node)
 
 	if (value)
 	{
-		first_node->ChangeType(value);
+		first_node->ChangeType(value, is_assign);
 		first_node->left = another_node;
-		another_node->parent = first_node;
+
+		if (another_node)
+			another_node->parent = first_node;
 	}
 	else
 	{

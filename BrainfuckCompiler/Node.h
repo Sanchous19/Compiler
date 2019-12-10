@@ -24,7 +24,7 @@ struct Node
 
 	Node(NodeKind node_kind, OperationKind operation_kind, std::shared_ptr<Node> parent, const int& value = 0);
 
-	void ChangeType(const int& new_value);
+	void ChangeType(const int& new_value, const bool& is_assign = false);
 
 	friend std::ostream& operator<<(std::ostream& out, const Node& node);
 
@@ -38,6 +38,7 @@ private:
 enum class NodeKind
 {
 	ADD,
+	ASSIGN,
 	CLOSE_BRACKET,
 	DEC,
 	ELSE,

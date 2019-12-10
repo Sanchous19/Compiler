@@ -68,6 +68,7 @@ void CodeGenerator::PrintNode(node_ptr node, const int& tab_number)
 
 const std::unordered_map<NodeKind, std::string> CodeGenerator::node_representation_ = {
 	{NodeKind::ADD, "arr[i] += "},
+	{NodeKind::ASSIGN, "arr[i] = "},
 	{NodeKind::CLOSE_BRACKET, "}"},
 	{NodeKind::DEC, "arr[i]--;"},
 	{NodeKind::INC, "arr[i]++;"},
@@ -84,6 +85,7 @@ const std::unordered_map<NodeKind, std::string> CodeGenerator::node_representati
 
 const std::unordered_set<NodeKind> CodeGenerator::print_value_nodes_ = {
 	NodeKind::ADD,
+	NodeKind::ASSIGN,
 	NodeKind::MOVE_DOWN,
 	NodeKind::MOVE_UP,
 	NodeKind::SUB,
